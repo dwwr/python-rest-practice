@@ -1,12 +1,12 @@
 from flask_oidc import OpenIDConnect
 from flask import Flask, json, g, request
-from ..service import Service as Kudo
-from ...db.schema import GithubRepoSchema
-from flask_cors import flask_cors
+from server.service import Service as Kudo
+from db.schema import GithubRepoSchema
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.update({
-  'OIDC_CLIENT_SECRETS': './../../../../../client_secrets.json',
+  'OIDC_CLIENT_SECRETS': './client_secrets.json',
   'OIDC_RESOURCE_SERVER_ONLY': True
 })
 
@@ -29,11 +29,13 @@ def create():
 @app.route("/kudos", methods=["GET"])
 @oidc.accept_token(True)
 def index():
-  return json_response(Kudo(g.oidc_token_info['sub']).find_all_kudos()
+  return json_response(Kudo(g.oidc_token_info['sub']).find_all_kudos())
 
-#GET to kudo (get one by repo id)
+
+# #GET to kudo (get one by repo id)
 @app.route("/kudo/<int:repo_id", methods=["GET"])
 @oidc.accept_token(True)
+
 def show(repo_id):
   kudo = Kudo(g.oidc_token_info['sub']).find_kudo(repo_id)
 
@@ -42,7 +44,7 @@ def show(repo_id):
   else:
     return json_response({'error': 'kudo not found'}, 404)
 
-#PUT to kudo (update one by repo id)
+# #PUT to kudo (update one by repo id)
 @app.route("/kudo/<int:repo_id", methods=["PUT"])
 @oidc.accept_token(True)
 def update(repo_id):
@@ -58,7 +60,7 @@ def update(repo_id):
   else:
     return json_response({'error': 'kudo not found'}, 404)
 
-#Delete to kudo (delete one by repo id)
+# #Delete to kudo (delete one by repo id)
 @app.route("/kudo/<int:repo_id>", methods=["DELETE"])
 @oidc.accept_token(True)
 def delete(repo_id):

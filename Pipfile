@@ -8,8 +8,12 @@ marshmallow = "==2.16.3"
 pymongo = "==3.7.2"
 flask-oidc = "==1.4.0"
 flask-cors = "==3.0.7"
+flask = "*"
 
 [dev-packages]
 
 [requires]
 python_version = "3.8"
+
+[scripts]
+server = "FLASK_APP=$PWD/server/api/endpoints.py FLASK_ENV=development pipenv run python -m flask run --port 4433"

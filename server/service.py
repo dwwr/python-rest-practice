@@ -1,6 +1,6 @@
-from ..db import Repository
-from ..db.mongo import MongoRepository
-from ..db.schema import KudoSchema
+from db import Repository
+from db.mongo import MongoRepository
+from db.schema import KudoSchema
 
 
 class Service(object):
