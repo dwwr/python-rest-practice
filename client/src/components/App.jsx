@@ -12,7 +12,20 @@ class App extends React.Component {
 
   render () {
     return (
-      <div>Heyyy</div>
+      <Router>
+      <Security
+        issuer='https://dev-67516213.okta.com/oauth2/default'
+        client_id='0oa51880eJfas1ZtG5d6'
+        redirect_uri={window.location.origin + '/implicit/callback'}
+        scope={['openid', 'profile', 'email']}>
+
+        <Switch>
+          <Route exact path="/" component={Login} />
+          <Route path="/implicit/callback" component={LoginCallback} />
+          <SecureRoute path="/home" component={Home} />
+        </Switch>
+      </Security>
+    </Router>
     );
   }
 }
