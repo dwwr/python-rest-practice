@@ -1,25 +1,162 @@
+// import React from 'react';
+// import { Link, useHistory } from 'react-router-dom';
+// import { useOktaAuth } from '@okta/okta-react';
+
+// const Home = () => {
+//   const { authState, oktaAuth } = useOktaAuth();
+//   const history = useHistory();
+
+//   if (authState.isPending) {
+//     return <div>Loading...</div>;
+//   }
+
+//   const button = authState.isAuthenticated ?
+//     <button onClick={() => {oktaAuth.signOut()}}>Logout</button> :
+//     <button onClick={() => {history.push('/login')}}>Login</button>;
+
+//   return (
+//     <div>
+//       <Link to='/'>Home</Link><br/>
+//       <Link to='/protected'>Protected</Link><br/>
+//       {button}
+//     </div>
+//   );
+// };
+// export default Home;
+
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { useOktaAuth } from '@okta/okta-react';
+import { withStyles } from '@material-ui/core/styles';
+import SwipeableViews from 'react-swipeable-views';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import Grid from '@material-ui/core/Grid';
+import { withOktaAuth } from '@okta/okta-react';
 
-const Home = () => {
-  const { authState, oktaAuth } = useOktaAuth();
-  const history = useHistory();
+import GithubRepo from "./GitRepo.jsx"
+import SearchBar from "./SearchBar.jsx"
 
-  if (authState.isPending) {
-    return <div>Loading...</div>;
+import githubClient from '../githubClient.js'
+import APIClient from '../apiClient.js'
+
+const styles = theme => ({
+  root: {
+    flexGrow: 1,
+    marginTop: 30
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+  },
+});
+
+class Home extends React.Component {
+  state = {
+    value: 0,
+    repos: [],
+    kudos: []
+  };
+
+  async componentDidMount() {
+    const accessToken = await this.props.authService.getAccessToken()
+    this.apiClient = new APIClient(accessToken);
+    this.apiClient.getKudos().then((data) =>
+      this.setState({...this.state, kudos: data})
+    );
   }
 
-  const button = authState.isAuthenticated ?
-    <button onClick={() => {oktaAuth.signOut()}}>Logout</button> :
-    <button onClick={() => {history.push('/login')}}>Login</button>;
+  handleTabChange = (event, value) => {
+    this.setState({ value });
+  };
 
-  return (
-    <div>
-      <Link to='/'>Home</Link><br/>
-      <Link to='/protected'>Protected</Link><br/>
-      {button}
-    </div>
-  );
-};
-export default Home;
+  handleTabChangeIndex = index => {
+    this.setState({ value: index });
+  };
+
+  resetRepos = repos => this.setState({ ...this.state, repos })
+
+  isKudo = repo => this.state.kudos.find(r => r.id === repo.id)
+    onKudo = (repo) => {
+      this.updateBackend(repo);
+  }
+
+  updateBackend = (repo) => {
+    if (this.isKudo(repo)) {
+      this.apiClient.deleteKudo(repo);
+    } else {
+      this.apiClient.createKudo(repo);
+    }
+    this.updateState(repo);
+  }
+
+  updateState = (repo) => {
+    if (this.isKudo(repo)) {
+      this.setState({
+        ...this.state,
+        kudos: this.state.kudos.filter( r => r.id !== repo.id )
+      })
+    } else {
+      this.setState({
+        ...this.state,
+        kudos: [repo, ...this.state.kudos]
+      })
+    }
+  }
+
+  onSearch = (event) => {
+    const target = event.target;
+    if (!target.value || target.length < 3) { return }
+    if (event.which !== 13) { return }
+
+    githubClient(target.value)
+      .then((response) => {
+        target.blur();
+        this.setState({ ...this.state, value: 1 });
+        this.resetRepos(response.items);
+      })
+  }
+
+  renderRepos = (repos) => {
+    if (!repos) { return [] }
+    return repos.map((repo) => {
+      return (
+        <Grid item xs={12} md={3} key={repo.id}>
+          <GithubRepo onKudo={this.onKudo} isKudo={this.isKudo(repo)} repo={repo} />
+        </Grid>
+      );
+    })
+  }
+
+  render() {
+    return (
+      <div className={styles.root}>
+        <SearchBar onSearch={this.onSearch} />
+        <Tabs
+          value={this.state.value}
+          onChange={this.handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+        >
+          <Tab label="Kudos" />
+          <Tab label="Search" />
+        </Tabs>
+
+        <SwipeableViews
+          axis={'x-reverse'}
+          index={this.state.value}
+          onChangeIndex={this.handleTabChangeIndex}
+        >
+          <Grid container spacing={16} style={{padding: '20px 0'}}>
+            { this.renderRepos(this.state.kudos) }
+          </Grid>
+          <Grid container spacing={16} style={{padding: '20px 0'}}>
+            { this.renderRepos(this.state.repos) }
+          </Grid>
+        </SwipeableViews>
+      </div>
+    );
+  }
+}
+
+export default withStyles(styles)(withOktaAuth(Home));

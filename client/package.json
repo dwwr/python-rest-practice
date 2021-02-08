@@ -3,12 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "babel": {
-    "presets": [
-      "@babel/preset-env",
-      "@babel/preset-react"
-    ]
-  },
   "scripts": {
     "start": "webpack serve --open",
     "create": "webpack",
@@ -21,6 +15,7 @@
     "@material-ui/icons": "^4.9.1",
     "@okta/okta-auth-js": "^4.6.2",
     "@okta/okta-react": "^4.1.0",
+    "axios": "^0.21.1",
     "path": "^0.12.7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -30,6 +25,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.13",
+    "@babel/plugin-proposal-class-properties": "^7.12.13",
     "@babel/preset-env": "^7.12.13",
     "@babel/preset-react": "^7.12.13",
     "babel-loader": "^8.2.2",
